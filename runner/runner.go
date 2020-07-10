@@ -21,18 +21,26 @@ const (
 
 var (
 	RegistryExtensionOptions = []string{".com", ".io", ".org", ".net"}
-	DefaultContainerName = uuid.New().String()
-	ErrNoContainerId = errors.New("container id does not exist")
+	DefaultContainerName     = uuid.New().String()
+	ErrNoContainerId         = errors.New("container id does not exist")
 )
 
+// ContainerRunner describes something that can start and stop containers
+type ContainerRunner interface {
+	Start(context.Context) error
+	Stop(context.Context) error
+}
+
+// containerRunner implements ContainerRunner and can construct a custom
+// container with image and port options
 type containerRunner struct {
-	name string
-	image string
-	ports []string
+	name         string
+	image        string
+	ports        []string
 	exposedPorts nat.PortSet
 	portBindings nat.PortMap
-	opts *ContainerRunnerOpts
-	client *client.Client
+	opts         *ContainerRunnerOpts
+	client       *client.Client
 	// id managed by the runner itself
 	id string
 }
@@ -65,7 +73,7 @@ func (r *containerRunner) WithPorts(ports ...int) *containerRunner {
 		r.exposedPorts[nat.Port(port)] = struct{}{}
 		r.portBindings[nat.Port(port)] = []nat.PortBinding{
 			{
-				HostIP: DefaultHostAddress,
+				HostIP:   DefaultHostAddress,
 				HostPort: port,
 			},
 		}
@@ -118,7 +126,7 @@ func (e *containerRunner) Start(ctx context.Context) error {
 		Image:        e.image,
 		ExposedPorts: e.exposedPorts,
 	}, &container.HostConfig{
-		PortBindings:  e.portBindings,
+		PortBindings: e.portBindings,
 	}, nil, e.name)
 	if err != nil {
 		return fmt.Errorf("creating container: %w", err)
