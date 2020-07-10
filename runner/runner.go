@@ -25,15 +25,15 @@ var (
 	ErrNoContainerId         = errors.New("container id does not exist")
 )
 
-// ContainerRunner describes something that can start and stop containers
-type ContainerRunner interface {
+// ContainerRunnerInterface describes something that can start and stop containers
+type ContainerRunnerInterface interface {
 	Start(context.Context) error
 	Stop(context.Context) error
 }
 
-// containerRunner implements ContainerRunner and can construct a custom
+// ContainerRunner implements ContainerRunnerInterface and can construct a custom
 // container with image and port options
-type containerRunner struct {
+type ContainerRunner struct {
 	name         string
 	image        string
 	ports        []string
@@ -54,8 +54,8 @@ type ContainerRunnerOpts struct {
 
 // NewContainerRunner builds a runner that can be used to start and stop
 // containers using the locally installed docker engine
-func NewContainerRunner() *containerRunner {
-	return &containerRunner{
+func NewContainerRunner() *ContainerRunner {
+	return &ContainerRunner{
 		exposedPorts: map[nat.Port]struct{}{},
 		portBindings: map[nat.Port][]nat.PortBinding{},
 		opts: &ContainerRunnerOpts{
@@ -66,7 +66,7 @@ func NewContainerRunner() *containerRunner {
 
 // WithPorts sets the ports that should be exposed and forwarded from the
 // container
-func (r *containerRunner) WithPorts(ports ...int) *containerRunner {
+func (r *ContainerRunner) WithPorts(ports ...int) *ContainerRunner {
 	for _, p := range ports {
 		port := strconv.Itoa(p)
 		r.ports = append(r.ports, port)
@@ -83,7 +83,7 @@ func (r *containerRunner) WithPorts(ports ...int) *containerRunner {
 
 // WithImage sets the container image that should be used. It defaults to
 // the docker registry.
-func (r *containerRunner) WithImage(image string) *containerRunner {
+func (r *ContainerRunner) WithImage(image string) *ContainerRunner {
 	r.image = image
 	if !substringContainedInSlice(image, RegistryExtensionOptions) {
 		r.image = fmt.Sprintf("docker.io/library/%v", image)
@@ -93,7 +93,7 @@ func (r *containerRunner) WithImage(image string) *containerRunner {
 
 // WithName sets the name of the container. Note that running Start with a
 // container name that already exists will cause Start to fail.
-func (r *containerRunner) WithName(name string) *containerRunner {
+func (r *ContainerRunner) WithName(name string) *ContainerRunner {
 	r.name = name
 	if len(name) == 0 {
 		r.name = DefaultContainerName
@@ -102,13 +102,13 @@ func (r *containerRunner) WithName(name string) *containerRunner {
 }
 
 // WithOptions sets the options that the runner should run with=
-func (r *containerRunner) WithOptions(opts *ContainerRunnerOpts) *containerRunner {
+func (r *ContainerRunner) WithOptions(opts *ContainerRunnerOpts) *ContainerRunner {
 	r.opts = opts
 	return r
 }
 
 // Start starts the container with the provided options
-func (e *containerRunner) Start(ctx context.Context) error {
+func (e *ContainerRunner) Start(ctx context.Context) error {
 	var err error
 	e.client, err = client.NewEnvClient()
 	if err != nil {
@@ -144,7 +144,7 @@ func (e *containerRunner) Start(ctx context.Context) error {
 }
 
 // Stop stops the container that was started using Start
-func (e *containerRunner) Stop(ctx context.Context) error {
+func (e *ContainerRunner) Stop(ctx context.Context) error {
 	log.Infoln("stopping container")
 	// If we don't have a container id
 	if len(e.id) == 0 {
