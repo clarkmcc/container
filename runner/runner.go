@@ -132,6 +132,7 @@ func (e *ContainerRunner) Start(ctx context.Context) error {
 	resp, err := e.client.ContainerCreate(ctx, &container.Config{
 		Image:        e.image,
 		ExposedPorts: e.exposedPorts,
+		Env: e.env,
 	}, &container.HostConfig{
 		PortBindings: e.portBindings,
 	}, nil, e.name)
