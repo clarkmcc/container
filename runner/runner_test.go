@@ -16,27 +16,42 @@ func TestNewContainerRunner(t *testing.T) {
 	err := runner.Start(context.Background())
 	require.NoError(t, err)
 
-	<- time.After(5 * time.Second)
+	<-time.After(5 * time.Second)
+
+	err = runner.Stop(context.Background())
+	require.NoError(t, err)
+
+	runner = NewContainerRunner().
+		WithName("mssql").
+		WithImage("mcr.microsoft.com/mssql/server").
+		WithEnvironmentVariable("SA_PASSWORD", "1234abcDEF").
+		WithEnvironmentVariable("ACCEPT_EULA", "Y").
+		WithPorts(1433)
+
+	err = runner.Start(context.Background())
+	require.NoError(t, err)
+
+	<-time.After(5 * time.Second)
 
 	err = runner.Stop(context.Background())
 	require.NoError(t, err)
 }
 
 func TestSubStringInStrings(t *testing.T) {
-	var testCases = []struct{
+	var testCases = []struct {
 		name string
-		in string
-		out bool
+		in   string
+		out  bool
 	}{
-	    {
-	        name: "no docker hub",
-	        in: "mongo",
-	        out: false,
-	    },{
-	        name: "docker hub",
-	        in: "docker.io/library/mongo",
-	        out: true,
-	    },
+		{
+			name: "no docker hub",
+			in:   "mongo",
+			out:  false,
+		}, {
+			name: "docker hub",
+			in:   "docker.io/library/mongo",
+			out:  true,
+		},
 	}
 
 	for _, c := range testCases {

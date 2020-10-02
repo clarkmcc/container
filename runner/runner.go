@@ -37,6 +37,7 @@ type ContainerRunner struct {
 	name         string
 	image        string
 	ports        []string
+	env          []string
 	exposedPorts nat.PortSet
 	portBindings nat.PortMap
 	opts         *ContainerRunnerOpts
@@ -58,6 +59,7 @@ func NewContainerRunner() *ContainerRunner {
 	return &ContainerRunner{
 		exposedPorts: map[nat.Port]struct{}{},
 		portBindings: map[nat.Port][]nat.PortBinding{},
+		env:          []string{},
 		opts: &ContainerRunnerOpts{
 			RemoveOnFinalization: true,
 		},
@@ -98,6 +100,11 @@ func (r *ContainerRunner) WithName(name string) *ContainerRunner {
 	if len(name) == 0 {
 		r.name = DefaultContainerName
 	}
+	return r
+}
+
+func (r *ContainerRunner) WithEnvironmentVariable(key, val string) *ContainerRunner {
+	r.env = append(r.env, fmt.Sprintf("%v=%v", key, val))
 	return r
 }
 
